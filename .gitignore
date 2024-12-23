@@ -1,0 +1,25 @@
+# 忽略构建输出
+build/
+*.o
+*.obj
+*.rsp
+*.exe
+*.bin
+*.log
+
+# 忽略 CMake 生成文件
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# 忽略 VSCode 配置以外的文件
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# 忽略其他临时文件
+*.marks
+*.dis.txt
+*.elf.txt
