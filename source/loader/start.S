@@ -19,6 +19,8 @@
 _start:
 
 	mov $0xe, %ah
+	mov $'\n', %al
+	int $0x10
 	mov $'L', %al
 	int $0x10
 	mov $'O', %al
@@ -26,6 +28,8 @@ _start:
 	mov $'A', %al
 	int $0x10
 	mov $'D', %al
+	int $0x10
+	mov $'\n', %al
 	int $0x10
 
 	jmp loader_entry
