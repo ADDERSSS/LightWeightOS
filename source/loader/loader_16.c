@@ -2,7 +2,7 @@ __asm__(".code16gcc");
 
 #include "loader.h"
 
-static _boot_info_t boot_info;
+_boot_info_t boot_info;
 
 static void show_msg (const char * msg){
     char c;
@@ -19,9 +19,9 @@ static void show_msg (const char * msg){
 
 static void detect_memory (void) {
 
-    unit32_t contID =0;
+    uint32_t contID =0;
     SMAP_entry_t smap_entry;
-    unit32_t signature,bytes;
+    uint32_t signature,bytes;
 
     show_msg("\rtry to detect memory:");
 
@@ -53,24 +53,28 @@ static void detect_memory (void) {
 
 }
 
-unit16_t gdt_table[][4] = {
+uint16_t gdt_table[][4] = {
     {0, 0, 0, 0},
     {0xFFFF, 0X0000, 0X9a00, 0X00cf},
     {0xFFFF, 0X0000, 0X9200, 0X00cf},
 }; 
 
 static void enter_protect_mode (void) {
+
+    // 实模式切换到保护模式需要遵循一定流程 
+    // ① 禁用中断 ② 打开A20地址线 ③ 加载GDT表 ④ 设置CR0保护模式使能位 ⑤ 远跳转清空流水线，取消16位指令
+    //1
     cli();
-
-    unit8_t v = inb(0x92);
+    //2
+    uint8_t v = inb(0x92);
     outb(0x92, v | 0x2);
-
-    lgdt((unit32_t)gdt_table, sizeof(gdt_table)); 
-
-    unit32_t cr0 = read_cr0();
+    //3
+    lgdt((uint32_t)gdt_table, sizeof(gdt_table)); 
+    //4
+    uint32_t cr0 = read_cr0();
     write_cr0(cr0 | (1 << 0));
-
-    far_jump(8, (unit32_t)protect_mode_entry);
+    //5
+    far_jump(8, (uint32_t)protect_mode_entry);
 
 }
 

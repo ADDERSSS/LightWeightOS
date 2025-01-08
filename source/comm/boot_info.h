@@ -7,12 +7,15 @@
 
 typedef struct _boot_info_t {
     struct {
-        unit32_t start;
-        unit32_t size;
+        uint32_t start;
+        uint32_t size;
     }ram_region_cfg[BOOT_RAM_REGION_MAX];
     
     int ram_region_count;
      
 }_boot_info_t;
+
+#define SECTOR_SIZE 512
+#define SYS_KERNEL_LOAD_ADDR (1024 * 1024)
 
 #endif

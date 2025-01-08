@@ -3,8 +3,8 @@
 
 #include "types.h"
 
-static inline unit8_t inb (unit16_t port) {
-     unit8_t rv;
+static inline uint8_t inb (uint16_t port) {
+     uint8_t rv;
      
      // inb al, dx
 
@@ -12,7 +12,16 @@ static inline unit8_t inb (unit16_t port) {
      return rv;
 }
 
-static inline void outb (unit16_t port, unit8_t data) {
+static inline uint16_t inw (uint16_t port) {
+     uint16_t rv;
+     
+     // inw ax, dx
+
+     __asm__ __volatile__("in %[p], %[v]" : [v]"=a"(rv) : [p]"d"(port));
+     return rv;
+}
+
+static inline void outb (uint16_t port, uint8_t data) {
      // outb al, dx
 
      __asm__ __volatile__("outb %[v], %[p]" :: [p]"d"(port), [v]"a"(data));
@@ -26,12 +35,12 @@ static inline void sti (void) {
      __asm__ __volatile__("sti");
 }
 
-static inline void lgdt (unit32_t start, unit32_t size) {
+static inline void lgdt (uint32_t start, uint32_t size) {
 
      struct {
-          unit16_t limit;
-          unit16_t start15_0;
-          unit16_t start31_16;
+          uint16_t limit;
+          uint16_t start15_0;
+          uint16_t start31_16;
      }gdt;
 
      gdt.start31_16 = start >> 16;
@@ -41,19 +50,19 @@ static inline void lgdt (unit32_t start, unit32_t size) {
      __asm__ __volatile__("lgdt %[g]" :: [g]"m"(gdt));
 }
 
-static inline unit16_t read_cr0 (void) {
-     unit32_t cr0;
+static inline uint16_t read_cr0 (void) {
+     uint32_t cr0;
 
      __asm__ __volatile__("mov %%cr0, %[v]" : [v]"=r"(cr0));
      return cr0;
 }
 
-static inline void write_cr0 (unit32_t v) {
+static inline void write_cr0 (uint32_t v) {
      __asm__ __volatile__("mov %[v], %%cr0" :: [v]"r"(v));
 }
 
-static inline void far_jump (unit32_t selector, unit32_t offset) {
-     unit32_t addr[] = {offset, selector};
+static inline void far_jump (uint32_t selector, uint32_t offset) {
+     uint32_t addr[] = {offset, selector};
 
      __asm__ __volatile__("ljmpl *(%[a])" :: [a]"r"(addr));
 }

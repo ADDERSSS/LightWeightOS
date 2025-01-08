@@ -8,14 +8,15 @@
 void protect_mode_entry (void);
 typedef struct SMAP_entry {
 
-    unit32_t BaseL;
-    unit32_t BaseH;
-    unit32_t LengthL;
-    unit32_t LengthH;
-    unit32_t Type;
-    unit32_t ACPI;
+    uint32_t BaseL;
+    uint32_t BaseH;
+    uint32_t LengthL;
+    uint32_t LengthH;
+    uint32_t Type;
+    uint32_t ACPI;
 
 }__attribute__((packed)) SMAP_entry_t;
 
+extern _boot_info_t boot_info;
 
 #endif
