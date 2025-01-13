@@ -4,6 +4,7 @@
 #include "comm/boot_info.h"
 #include "comm/types.h"
 #include "comm/cpu_instr.h"
+#include "comm/elf.h"
 
 void protect_mode_entry (void);
 typedef struct SMAP_entry {
