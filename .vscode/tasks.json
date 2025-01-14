@@ -18,6 +18,26 @@
                 "cwd": "${workspaceRoot}/../../image/"
             },
         },
+        // {
+        //     "label": "----------------- wait(不要点)",
+        //     "type": "shell",
+            
+        //     // 在不同操作系统下，用不同的命令延时
+        //     "command": "sleep 2",
+        //     "windows": {
+        //         "command": "timeout 2"
+        //     },
+        //     "linux": {
+        //         "command": "sleep 2"
+        //     },
+        //     "osx": {
+        //         "command": "sleep 2"
+        //     },
+            
+        //     "options": {
+        //         "cwd": "${workspaceRoot}/../../image/"
+        //     }
+        // },
         {
             "label": "----------------- start qemu(不要点)",
             "type": "shell",
@@ -38,6 +58,7 @@
             "dependsOrder": "sequence",
             "dependsOn": [
                 "----------------- image write(不要点)",
+                // "----------------- wait(不要点)",
                 "----------------- start qemu(不要点)"
             ],
         }

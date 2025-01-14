@@ -37,7 +37,7 @@ static inline void sti (void) {
 
 static inline void lgdt (uint32_t start, uint32_t size) {
 
-     struct {
+     struct __attribute__((packed)) {
           uint16_t limit;
           uint16_t start15_0;
           uint16_t start31_16;

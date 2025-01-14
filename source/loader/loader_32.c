@@ -16,15 +16,11 @@ static void read_disk (uint32_t sector, uint32_t sector_count, uint8_t* buf){
 
     uint16_t* data_buf = (uint16_t*)buf;
     while (sector_count--) {
-        while ((inb(0x1F7) & 0x88) != 0x8 ) {
-
+        while ((inb(0x1F7) & 0x88) != 0x8 ) {}
             for (int i=0; i < SECTOR_SIZE / 2; i ++) {
                 *data_buf++ = inw(0x1F0);
             }
-        }
     }
-
-
 }
 static uint32_t reload_elf_file (uint8_t * file_buffer) {
     ELF32_Ehdr * elf_hdr = (ELF32_Ehdr *)file_buffer;
