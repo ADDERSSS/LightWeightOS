@@ -5,4 +5,7 @@
 #define KERNEL_SELECTOR_CS (1 * 8)
 #define KERNEL_SELECTOR_DS (2 * 8)
 #define KERNEL_STACK_SIZE (8 * 1024)
+
+#define OS_TICKS_MS 10
+
 #endif
