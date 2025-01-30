@@ -10,14 +10,16 @@ void kernel_init (_boot_info_t * boot_info) {
     log_init();
     irq_init();
     time_init();
-
-    
 }
 
 void init_main (void) {
+
     log_printf("Kernel is running ...");
     log_printf("Version: %s %s", OS_VERSION, "LightWeightOS");
+
     // int a = 3 / 0;
+
     // irq_enable_global();
+
     for (;;) {}
 }
