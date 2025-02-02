@@ -98,6 +98,43 @@ int kernel_memcmp(void * d1, void * d2, int size) {
     return 0;
 }
 
+void kernel_itoa(char *buf, int num, int base) {
+    static const char *num2ch = "0123456789ABCDEF";
+    char *p = buf;
+    
+    // 校验基数是否合法
+    if ((base != 2) && (base != 8) && (base != 10) && (base != 16)) {
+        *p = '\0';  // 基数无效时，设置为空字符串
+        return;
+    }
+    
+    char *start = p; // 保存当前指针位置，用于反转字符串
+    
+    // 处理负数，仅在十进制下
+    if ((num < 0) && (base == 10)) {
+        *p++ = '-';
+        num = -num;
+        start ++;
+    }
+
+    do {
+        *p++ = num2ch[num % base];
+        num /= base;
+    } while (num);
+
+    *p-- = '\0'; // 结束字符串
+
+    // 反转字符串
+    char *end = p;
+    while (start < end) {
+        char temp = *start;
+        *start = *end;
+        *end = temp;
+        start++;
+        end--;
+    }
+}
+
 void kernel_vsprintf(char * buf, const char * fmt, va_list args) {
     enum {NORMAL, READ_FMT} state = NORMAL;
     char * curr = buf;
@@ -112,7 +149,18 @@ void kernel_vsprintf(char * buf, const char * fmt, va_list args) {
                 }
                 break;
             case READ_FMT:
-                if (ch == 's') {
+                if (ch == 'd') {
+                    int num = va_arg(args, int);
+                    kernel_itoa(curr, num, 10);
+                    curr += kernel_strlen(curr);
+                } else if (ch == 'x') {
+                    int num = va_arg(args, int);
+                    kernel_itoa(curr, num, 16);
+                    curr += kernel_strlen(curr);
+                } else if (ch == 'c') {
+                    char c = va_arg(args, int);
+                    *curr += c;
+                } else if (ch == 's') {
                     const char * str = va_arg(args, char *);
                     int len = kernel_strlen(str);
                     while (len--) {
@@ -122,5 +170,21 @@ void kernel_vsprintf(char * buf, const char * fmt, va_list args) {
                 state = NORMAL;
                 break;
         }
+    }
+}
+
+void kernel_sprintf(char * buf, const char * fmt, ...) {
+    va_list args;
+
+    va_start(args, fmt);
+    kernel_vsprintf(buf, fmt, args);
+    va_end(args);
+}
+
+void pannic(const char * file, int line, const char * func, const char * cond) {
+    log_printf("assert failed! %s", cond);
+    log_printf("file: %s\nfunc: %s\nline: %d\n", file, func, line);
+    for (;;) {
+        hlt();
     }
 }
