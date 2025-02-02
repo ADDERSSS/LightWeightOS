@@ -99,41 +99,45 @@ int kernel_memcmp(void * d1, void * d2, int size) {
 }
 
 void kernel_itoa(char *buf, int num, int base) {
-    static const char *num2ch = "0123456789ABCDEF";
+    static const char *num2ch = "0123456789ABCDEF";  // 十六进制字符映射
     char *p = buf;
     
-    // 校验基数是否合法
+    // 仅支持部分进制
     if ((base != 2) && (base != 8) && (base != 10) && (base != 16)) {
-        *p = '\0';  // 基数无效时，设置为空字符串
+        *p = '\0';
         return;
     }
-    
-    char *start = p; // 保存当前指针位置，用于反转字符串
-    
-    // 处理负数，仅在十进制下
+
+    // 处理十进制负数
+    int signed_num = 0;
     if ((num < 0) && (base == 10)) {
         *p++ = '-';
-        num = -num;
-        start ++;
+        signed_num = 1;
+        num = -num;  // 负数转为正数
     }
 
-    do {
-        *p++ = num2ch[num % base];
-        num /= base;
-    } while (num);
+    // 处理数字转换
+    if (base == 10 || base == 16) {
+        uint32_t u_num = (uint32_t)num;  // 转为无符号数处理
+        do {
+            *p++ = num2ch[u_num % base];  // 获取当前位字符
+            u_num /= base;
+        } while (u_num);  // 直到除尽
+    }
 
-    *p-- = '\0'; // 结束字符串
+    *p-- = '\0';  // 结束字符串
 
-    // 反转字符串
-    char *end = p;
-    while (start < end) {
-        char temp = *start;
-        *start = *end;
-        *end = temp;
+    // 将转换结果逆序，生成最终的结果
+    char *start = buf + (signed_num ? 1 : 0);  // 如果有符号，从第1位开始
+    while (start < p) {
+        char ch = *start;
+        *start = *p;
+        *p-- = ch;
         start++;
-        end--;
     }
 }
+
+
 
 void kernel_vsprintf(char * buf, const char * fmt, va_list args) {
     enum {NORMAL, READ_FMT} state = NORMAL;
