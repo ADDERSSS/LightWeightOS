@@ -4,6 +4,9 @@
 #include "comm/types.h"
 #include "comm/cpu_instr.h"
 
+#define EFLAGS_DEFAULT (1 << 1)
+#define EFLAGS_IF (1 << 9)
+
 #pragma pack(1)
 
 typedef struct _segment_desc_t {
@@ -21,7 +24,18 @@ typedef struct _gate_desc_t {
     uint16_t offset31_16;
 }gate_desc_t;
 
+typedef struct _tss_t {
+    uint32_t per_link;
+    uint32_t esp0, ss0, esp1, ss1, esp2, ss2;
+    uint32_t cr3;
+    uint32_t eip, eflags, eax, ecx, edx, ebx, esp, ebp, esi, edi;
+    uint32_t es, cs, ss, ds, fs, gs;
+    uint32_t ldt;
+    uint32_t iomap;
+}tss_t;
+
 #pragma pack()
+
 
 void cpu_init (void);
 
@@ -39,6 +53,7 @@ void segment_desc_set (int selector, uint32_t base, uint32_t limit, uint16_t att
 
 #define SEG_TYPE_CODE (1 << 3)
 #define SEG_TYPE_DATA (0 << 3)
+#define SEG_TYPE_TSS (9 << 0)
 
 #define SEG_TYPE_RW (1 << 1)
 
@@ -50,5 +65,9 @@ void gate_desc_set (gate_desc_t * desc, uint16_t sclector, uint32_t offset, uint
 #define GATE_DPL3 (3 << 13)
 
 #define GATE_TYPE_INT (0XE << 8)
+
+int gdt_alloc_desc (void);
+
+void switch_to_tss (int tss_sel);
 
 #endif
