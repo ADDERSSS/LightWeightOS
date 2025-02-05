@@ -5,6 +5,7 @@
 #include "comm/cpu_instr.h"
 #include "os_cfg.h"
 #include "cpu/irq.h"
+#include "core/task.h"
 
 #define PIT_OSC_FREQ 1193182
 #define PIT_COMMAND_MODE_PORT 0X43

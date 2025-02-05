@@ -16,9 +16,10 @@ void kernel_init (_boot_info_t * boot_info) {
     log_init();
     irq_init();
     time_init();
+
+    task_manager_init();
 }
 
-static task_t first_task;
 static uint32_t init_task_stack[1024];
 static task_t init_task;
 
@@ -27,7 +28,7 @@ void init_task_entry (void) {
 
     for (;;) {
         log_printf("init task: %d", count++);
-        task_switch_from_to(&init_task, &first_task);
+        //sys_sched_yield();
     }     
 }
 
@@ -101,23 +102,22 @@ void list_test (void) {
 
 void init_main (void) {
 
-    list_test();
+    // list_test();
 
     log_printf("Kernel is running ...");
     log_printf("Version: %s %s", OS_VERSION, "LightWeightOS");
     log_printf("%d %d %x %c", 123456, -123, 0x123, 'a');
 
     // int a = 3 / 0;
-    // irq_enable_global();
+    irq_enable_global();
 
-    task_init(&init_task, (uint32_t)init_task_entry, (uint32_t)&init_task_stack[1024]);
-    task_init(&first_task, 0, 0);
-    write_tr(first_task.tss_sel);
+    task_init(&init_task, "init task", (uint32_t)init_task_entry, (uint32_t)&init_task_stack[1024]);
+    task_first_init();
 
     int count = 0;
 
     for (;;) {
-        log_printf("int main: %d", count++);
-        task_switch_from_to(&first_task, &init_task);
+        log_printf("first task: %d", count++);
+        //sys_sched_yield();
     } 
 }
