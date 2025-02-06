@@ -6,6 +6,7 @@
 #include "tools/klib.h"
 #include "os_cfg.h"
 #include "tools/list.h"
+#include "cpu/irq.h"
 
 #define TASK_NAME_SIZE 32  
 
