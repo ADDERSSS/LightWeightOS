@@ -1,8 +1,12 @@
 #include <stdarg.h>
 #include "tools/log.h"
 #include "tools/klib.h"
+#include "ipc/mutex.h"
+
+static mutex_t log_mutex;
 
 void log_init (void) {  
+    mutex_init(&log_mutex);
     outb(COM1_PORT + 1, 0X00);
     outb(COM1_PORT + 3, 0X80);
     outb(COM1_PORT + 0, 0X3);
@@ -21,7 +25,7 @@ void log_printf(const char * fmt, ...) {
     kernel_vsprintf(str_buf, fmt, args);
     va_end(args);
 
-    irq_state_t state = irq_enter_protection();
+    mutex_lock(&log_mutex);
 
     const char * p = str_buf;
     while (*p != '\0') {
@@ -31,5 +35,5 @@ void log_printf(const char * fmt, ...) {
     outb(COM1_PORT, '\r');
     outb(COM1_PORT, '\n');
 
-    irq_leave_protection(state);
+    mutex_unlock(&log_mutex);
 }

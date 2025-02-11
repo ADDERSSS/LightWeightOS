@@ -1,7 +1,9 @@
 #include "cpu/cpu.h"
 #include "os_cfg.h"
+#include "ipc/mutex.h"
 
 static segment_desc_t gdt_table[GDT_TABLE_SIZE];
+static mutex_t gdt_mutex;
 
 void segment_desc_set (int selector, uint32_t base, uint32_t limit, uint16_t attr) {
     segment_desc_t * desc = gdt_table + selector / sizeof(segment_desc_t);
@@ -27,17 +29,17 @@ void gate_desc_set (gate_desc_t * desc, uint16_t sclector, uint32_t offset, uint
 }  
 
 int gdt_alloc_desc (void) {
-    irq_state_t state = irq_enter_protection();
+    mutex_lock(&gdt_mutex);
 
     for (int i = 1; i < GDT_TABLE_SIZE; i ++) {
         segment_desc_t * desc = gdt_table + i;
         if (desc->attr == 0) {
-            irq_leave_protection(state);
+            mutex_unlock(&gdt_mutex);
             return i * sizeof(segment_desc_t);
         }
     }
 
-    irq_leave_protection(state);
+    mutex_unlock(&gdt_mutex);
 
     return -1;
 }  
@@ -58,7 +60,7 @@ void init_gdt (void) {
 
 
 void cpu_init (void) {
-
+    mutex_init(&gdt_mutex);
     init_gdt();
     
 }
