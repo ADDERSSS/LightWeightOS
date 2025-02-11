@@ -27,15 +27,20 @@ void gate_desc_set (gate_desc_t * desc, uint16_t sclector, uint32_t offset, uint
 }  
 
 int gdt_alloc_desc (void) {
+    irq_state_t state = irq_enter_protection();
+
     for (int i = 1; i < GDT_TABLE_SIZE; i ++) {
         segment_desc_t * desc = gdt_table + i;
         if (desc->attr == 0) {
+            irq_leave_protection(state);
             return i * sizeof(segment_desc_t);
         }
     }
 
+    irq_leave_protection(state);
+
     return -1;
-}
+}  
 
 void init_gdt (void) {
     for (int i = 0; i < GDT_TABLE_SIZE; i ++) {

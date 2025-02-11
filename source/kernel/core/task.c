@@ -1,6 +1,8 @@
 #include "core/task.h"
 
+static uint32_t idle_task_stack[IDLE_TASK_SIZE];
 static task_manager_t task_manager;
+
 
 static int tss_init(task_t * task, uint32_t entry, uint32_t esp) {
     int tss_sel = gdt_alloc_desc();
@@ -40,6 +42,7 @@ int task_init (task_t * task, const char * name, uint32_t entry, uint32_t esp) {
 
     kernel_strncpy(task->name, name, TASK_NAME_SIZE);
     task->state = TASK_CREATED;
+    task->sleep_ticks = 0;
     task->time_ticks = TASK_TIME_SLICE_DEFAULT;
     task->slice_ticks = task->time_ticks;
     list_node_init (&task->all_node);
@@ -62,10 +65,19 @@ void task_switch_from_to (task_t * from, task_t * to) {
     //simple_switch(&from->stack, to->stack);
 }
 
+static void idle_task_entry (void) {
+    for (;;) {
+        hlt();
+    }
+}
+
 void task_manager_init (void) {
     list_init(&task_manager.task_list);
     list_init(&task_manager.ready_list);
+    list_init(&task_manager.sleep_list);
     task_manager.curr_task = (task_t *)0;
+
+    task_init(&task_manager.idle_task, "idle_task", (uint32_t)idle_task_entry, (uint32_t)(idle_task_stack + IDLE_TASK_SIZE));
 }
 
 void task_first_init (void) {
@@ -79,11 +91,17 @@ task_t * task_first_task (void) {
 }
 
 void task_set_ready(task_t * task) {
+    if (task == &task_manager.idle_task) {
+        return;
+    }
     list_insert_last(&task_manager.ready_list, &task->run_node);
     task->state = TASK_READY;
 }
 
 void task_set_block (task_t * task) {
+    if (task == &task_manager.idle_task) {
+        return;
+    }
     list_remove(&task_manager.ready_list, &task->run_node);
 }
 
@@ -92,6 +110,9 @@ task_t * task_current (void) {
 }
 
 task_t * task_next_run (void) {
+    if (list_count(&task_manager.ready_list) == 0) {
+        return &task_manager.idle_task;
+    }
     list_node_t * task_node = list_first(&task_manager.ready_list);
     return list_node_parent(task_node, task_t, run_node);
 }
@@ -138,4 +159,47 @@ void task_time_tick (void) {
 
         task_dispatch();
     }
+
+    list_node_t * curr_sleep = list_first(&task_manager.sleep_list);
+    while (curr_sleep) {
+        list_node_t * next_sleep = list_node_next(curr_sleep);
+
+        task_t * task = list_node_parent(curr_sleep, task_t, run_node);
+        if (--(task->sleep_ticks) == 0) {
+            task_set_weakup(task);
+            task_set_ready(task);
+        }
+
+        curr_sleep = next_sleep;
+
+    }
+
+    task_dispatch();
+}
+
+void task_set_sleep (task_t * task, uint32_t ticks) {
+    if (ticks == 0) {
+        return;
+    }
+
+    task->sleep_ticks = ticks;
+    task->state = TASK_SLEEP;
+    list_insert_last(&task_manager.sleep_list, &task->run_node);
+
+}
+
+void task_set_weakup (task_t * task) {
+    list_remove(&task_manager.sleep_list, &task->run_node);
+}
+
+void sys_sleep (uint32_t ms) {
+    irq_state_t state = irq_enter_protection();
+
+    task_set_block(task_manager.curr_task);
+    task_set_sleep(task_manager.curr_task, (ms + (OS_TICKS_MS - 1)) / OS_TICKS_MS);
+    
+    task_dispatch();
+
+    irq_leave_protection(state);
+
 }

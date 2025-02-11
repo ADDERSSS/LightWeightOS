@@ -3,6 +3,7 @@
 
 #include "comm/types.h"
 #include "comm/cpu_instr.h"
+#include "cpu/irq.h"
 
 #define EFLAGS_DEFAULT (1 << 1)
 #define EFLAGS_IF (1 << 9)

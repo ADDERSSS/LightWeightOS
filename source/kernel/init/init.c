@@ -29,6 +29,7 @@ void init_task_entry (void) {
     for (;;) {
         log_printf("init task: %d", count++);
         //sys_sched_yield();
+        sys_sleep(100);
     }     
 }
 
@@ -109,15 +110,17 @@ void init_main (void) {
     log_printf("%d %d %x %c", 123456, -123, 0x123, 'a');
 
     // int a = 3 / 0;
-    irq_enable_global();
 
     task_init(&init_task, "init task", (uint32_t)init_task_entry, (uint32_t)&init_task_stack[1024]);
     task_first_init();
+
+    irq_enable_global();
 
     int count = 0;
 
     for (;;) {
         log_printf("first task: %d", count++);
         //sys_sched_yield();
+        sys_sleep(1000);
     } 
 }
