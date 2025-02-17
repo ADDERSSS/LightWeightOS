@@ -10,5 +10,6 @@
 #include "core/task.h"
 #include "tools/list.h"
 #include "ipc/sem.h"
+#include "core/memory.h"
 
 #endif

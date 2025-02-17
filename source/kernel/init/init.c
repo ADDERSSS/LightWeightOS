@@ -6,6 +6,7 @@ void kernel_init (_boot_info_t * boot_info) {
 
     cpu_init();
     log_init();
+    memory_init(boot_info);
     irq_init();
     time_init();
 
@@ -95,7 +96,7 @@ void list_test (void) {
 
 }
 
-void init_main (void) {
+void init_main (void) {   
 
     // list_test();
 
