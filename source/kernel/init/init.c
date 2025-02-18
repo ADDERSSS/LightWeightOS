@@ -5,26 +5,13 @@ void kernel_init (_boot_info_t * boot_info) {
     // ASSERT(3 < 2);
     cpu_init();
     log_init();
+
     memory_init(boot_info);
+    
     irq_init();
     time_init();
 
     task_manager_init();
-}
-
-static uint32_t init_task_stack[1024];
-static task_t init_task;
-static sem_t sem;
-
-void init_task_entry (void) {
-    int count = 0;
-
-    for (;;) {
-        //sem_wait(&sem);
-        log_printf("init task: %d", count++);
-        //sys_sched_yield();
-        //sys_sleep(100);
-    }     
 }
 
 void list_test (void) {
@@ -95,6 +82,16 @@ void list_test (void) {
 
 }
 
+void move_to_first_task (void) {
+    task_t * curr = task_current();
+    ASSERT(curr != 0);
+
+    tss_t * tss = &(curr->tss);
+    __asm__ __volatile__(
+        "jmp *%[ip]"::[ip]"r"(tss->eip)
+    );
+}
+
 void init_main (void) {   
 
     // list_test();
@@ -103,20 +100,7 @@ void init_main (void) {
     log_printf("Version: %s %s", OS_VERSION, "LightWeightOS");
     log_printf("%d %d %x %c", 123456, -123, 0x123, 'a');
 
-    // int a = 3 / 0;
-
-    task_init(&init_task, "init task", (uint32_t)init_task_entry, (uint32_t)&init_task_stack[1024]);
     task_first_init();
-
-    sem_init(&sem, 0);
-
-    irq_enable_global();
-
-    int count = 0;
-    for (;;) {
-        log_printf("first task: %d", count++);
-        //sem_notify(&sem);
-        //sys_sched_yield();
-        //sys_sleep(1000);
-    } 
+    
+    move_to_first_task();
 }

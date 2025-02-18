@@ -23,5 +23,4 @@ static void init_pit (void) {
 void time_init (void) {
     sys_tick = 0;
     init_pit();
-
 }
