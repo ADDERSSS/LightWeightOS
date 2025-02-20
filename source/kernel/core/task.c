@@ -1,10 +1,12 @@
 #include "core/task.h"
 #include  "cpu/mmu.h"
 #include "core/memory.h"
+#include "core/syscall.h"
 
 static uint32_t idle_task_stack[IDLE_TASK_SIZE];
 static task_manager_t task_manager;
-
+static task_t task_table[TASK_NR];
+static mutex_t task_table_mutex;
 
 static int tss_init(task_t * task, int flag, uint32_t entry, uint32_t esp) {
     int tss_sel = gdt_alloc_desc();
@@ -66,6 +68,7 @@ int task_init (task_t * task, const char * name, int flag,  uint32_t entry, uint
     kernel_strncpy(task->name, name, TASK_NAME_SIZE);
     task->state = TASK_CREATED;
     task->sleep_ticks = 0;
+    task->parent = (task_t *)0;
     task->time_ticks = TASK_TIME_SLICE_DEFAULT;
     task->slice_ticks = task->time_ticks;
     list_node_init (&task->all_node);
@@ -84,6 +87,22 @@ int task_init (task_t * task, const char * name, int flag,  uint32_t entry, uint
     return 0;
 }
 
+void task_uninit (task_t * task) {
+    if (task->tss_sel) {
+        gdt_free_sel(task->tss_sel);
+    }
+
+    if (task->tss.esp0) {
+        memory_free_page(task->tss.esp0 - MEM_PAGE_SIZE);
+    }
+
+    if (task->tss.cr3) {
+        memory_destory_uvm(task->tss.cr3);
+    }
+
+    kernel_memset(task, 0, sizeof(task_t));
+}
+
 void simple_switch (uint32_t ** fron, uint32_t * to);
 
 void task_switch_from_to (task_t * from, task_t * to) {
@@ -98,6 +117,9 @@ static void idle_task_entry (void) {
 }
 
 void task_manager_init (void) {
+    kernel_memset(task_table, 0, sizeof(task_table));
+    mutex_init(&task_table_mutex);
+
     int sel = gdt_alloc_desc();
     segment_desc_set(sel, 0x000000000, 0XFFFFFFFF, SEG_P_PRESENT | SEG_DPL3 | SEG_S_NORMAL | SEG_TYPE_DATA | SEG_TYPE_RW | SEG_D);
     task_manager.app_data_sel = sel;
@@ -257,6 +279,72 @@ int sys_getpid (void) {
     return task->pid;
 }
 
+static task_t * alloc_task (void) {
+    task_t * task = (task_t *)0;
+
+    mutex_lock(&task_table_mutex);
+
+    for (int i = 0; i < TASK_NR; i ++) {
+        task_t * curr = task_table + i;
+        if (curr->name[0] == '\0') {
+            task = curr;
+            break;
+        }
+    }
+
+    mutex_unlock(&task_table_mutex);
+
+    return task;
+}
+
+static void free_task (task_t * task) {
+    mutex_lock(&task_table_mutex);
+    task->name[0] = '\0';
+    mutex_unlock(&task_table_mutex);
+}
+
 int sys_fork (void) {
+    task_t * parent_task = task_current();
+
+    task_t * child_task = alloc_task();
+    if (child_task == (task_t *)0) {
+        goto fork_failed;
+    }
+
+    syscall_frame_t * frame = (syscall_frame_t *)(parent_task->tss.esp0 - sizeof(syscall_frame_t));
+
+    int err = task_init(child_task, parent_task->name, 0, frame->eip, frame->esp + sizeof(uint32_t) * SYSCALL_PARAM_COUNT);
+    if (err < 0) {
+        goto fork_failed;
+    }
+    tss_t * tss = &child_task->tss;
+    tss->eax = 0;
+    tss->ebx = frame->ebx;
+    tss->ecx = frame->ecx;
+    tss->edx = frame->edx;
+    tss->esi = frame->esi;
+    tss->edi = frame->edi;
+    tss->ebp = frame->ebp;
+
+    tss->cs = frame->cs;
+    tss->ds = frame->ds;
+    tss->es = frame->es;
+    tss->fs = frame->fs;
+    tss->gs = frame->gs;
+    tss->eflags = frame->eflags;
+
+    child_task->parent = parent_task;
+
+    if ((child_task->tss.cr3 = memory_copy_uvm(parent_task->tss.cr3)) < 0) {
+        goto fork_failed;
+    }
+
+    return child_task->pid;
+
+fork_failed:
+    if (child_task) {
+        task_uninit(child_task);
+        free_task(child_task);
+    }
     return -1;
 }

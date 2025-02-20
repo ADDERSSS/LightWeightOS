@@ -7,14 +7,14 @@ int first_task_main (void) {
     int pid = getpid();
     print_msg("HELLO first id -%d-", pid);
 
-    int fpid = fork();
+    pid = fork();
 
-    if (fpid < 0) {
-        print_msg("failed-%d-", 0);
-    } else if (fpid == 0) {
+    if (pid < 0) {
+        print_msg("create failed-%d-", 0);
+    } else if (pid == 0) {
         print_msg("child-%d-", count);
     } else {
-        print_msg("child task id -%d-", fpid);
+        print_msg("child task id -%d-", pid);
         print_msg("parent-%d-", count);
     }
 

@@ -13,6 +13,8 @@
 
 #define IDLE_TASK_SIZE 1024
 
+#define TASK_NR 128
+
 #define OS_VERSION "1.0.0"
 
 #endif
