@@ -113,6 +113,7 @@ void do_handler_general_protection(exception_frame_t *frame) {
     log_printf("selector index: %d", frame->error_code & 0xFFF8);
 
     dump_core_regs(frame);
+    log_printf("-------------------------");
     while (1) {
         hlt();
     }
@@ -141,6 +142,7 @@ void do_handler_page_fault(exception_frame_t *frame) {
     }
 
     dump_core_regs(frame);
+    log_printf("-------------------------");
     while (1) {
         hlt();
     }
