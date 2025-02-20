@@ -69,6 +69,7 @@ void gate_desc_set (gate_desc_t * desc, uint16_t sclector, uint32_t offset, uint
 #define GATE_DPL3 (3 << 13)
 
 #define GATE_TYPE_INT (0XE << 8)
+#define GATE_TYPE_SYSCALL (0XC << 8)
 
 int gdt_alloc_desc (void);
 
