@@ -1,5 +1,30 @@
 #include "tools/klib.h"
 
+char * get_file_name (const char * name){
+    char * s = name;
+    while (*s != '\0') {
+        s++;
+    }
+
+    while ((*s != '/') && (*s != '\\') && (s >= name)) {
+        s--;
+    }
+
+    return s + 1;
+}
+
+int strings_count (char ** start){
+    int count = 0;
+
+    if (start) {
+        while (*start++) {
+            count ++;
+        }
+    }
+
+    return count;
+}
+
 void kernel_strcpy(char * dest, const char * src) {
     if (!dest || !src) {
         return;

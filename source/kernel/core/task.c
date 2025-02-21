@@ -81,12 +81,17 @@ int task_init (task_t * task, const char * name, int flag,  uint32_t entry, uint
 
     task->pid = (uint32_t)task;
 
-    task_set_ready(task);
     list_insert_last(&task_manager.task_list, &task->all_node);
 
     irq_leave_protection(state);
 
     return 0;
+}
+
+void task_start (task_t * task) {
+    irq_state_t state = irq_enter_protection();
+    task_set_ready(task);
+    irq_leave_protection(state);
 }
 
 void task_uninit (task_t * task) {
@@ -136,6 +141,7 @@ void task_manager_init (void) {
     task_manager.curr_task = (task_t *)0;
 
     task_init(&task_manager.idle_task, "idle_task", TASK_FLAGS_SYSTEM, (uint32_t)idle_task_entry, (uint32_t)(idle_task_stack + IDLE_TASK_SIZE));
+    task_start(&task_manager.idle_task);
 }
 
 void task_first_init (void) {
@@ -156,6 +162,8 @@ void task_first_init (void) {
 
     memory_alloc_page_for(first_task, alloc_size, PTE_P | PTE_W | PTE_U);
     kernel_memcpy((void *)first_task, s_first_task, copy_size);
+
+    task_start(&task_manager.first_task);
 }
 
 task_t * task_first_task (void) {
@@ -341,6 +349,8 @@ int sys_fork (void) {
         goto fork_failed;
     }
 
+    task_start(child_task);
+
     return child_task->pid;
 
 fork_failed:
@@ -436,8 +446,31 @@ load_failed:
     return 0;
 }
 
+static int copy_args (char * to, uint32_t page_dir, int argc, char ** argv) {
+    task_args_t task_args;
+    task_args.argc = argc;
+    task_args.argv = (char **)(to + sizeof(task_args_t));
+    task_args.ret_addr = 0;
+
+    char * dest_arg = to + sizeof(task_args_t) + sizeof(char *) * argc;
+    char ** dest_arg_tb = (char **)memory_get_paddr(page_dir, (uint32_t)(to + sizeof(task_args_t)));
+    for (int i = 0; i < argc; i ++) {
+        char * from = argv[i];
+        int len = kernel_strlen(from) + 1;
+        int err = memory_copy_uvm_data((uint32_t)dest_arg, page_dir, (uint32_t)from, len);
+        ASSERT (err >= 0);
+
+        dest_arg_tb[i] = dest_arg;
+        dest_arg += len;
+    }
+
+    return memory_copy_uvm_data((uint32_t)to, page_dir, (uint32_t)&task_args, sizeof(task_args));
+}
+
 int sys_execve (char * name, char ** argv, char ** env) {
     task_t * task = task_current();
+
+    kernel_strncpy(task->name, get_file_name(name), TASK_NAME_SIZE);
 
     uint32_t old_page_dir = task->tss.cr3;
     uint32_t new_page_dir = memory_create_uvm();
@@ -449,6 +482,27 @@ int sys_execve (char * name, char ** argv, char ** env) {
     if (entry == 0) {
         goto exec_failed;
     }
+
+    uint32_t stack_top = MEM_TASK_STACK_TOP - MEM_TASK_ARG_SIZE;
+    int err = memory_alloc_for_page_dir(new_page_dir, MEM_TASK_STACK_TOP - MEM_TASK_STACK_SIZE, MEM_TASK_STACK_SIZE, PTE_P | PTE_U | PTE_W);
+    if (err < 0) {
+        goto exec_failed;
+    }
+
+    int argc = strings_count(argv);
+
+    err = copy_args((char *)stack_top, new_page_dir, argc, argv);
+    if (err < 0) {
+        goto exec_failed;
+    }
+
+    syscall_frame_t * frame = (syscall_frame_t *)(task->tss.esp0 - sizeof(syscall_frame_t));
+    frame->eip = entry;
+    frame->eax = frame->ebx = frame->ecx = frame->edx = 0;
+    frame->esi = frame->edi = frame->ebp = 0;
+    frame->eflags = EFLAGS_IF | EFLAGS_DEFAULT;
+    frame->esp = stack_top - sizeof(uint32_t) * SYSCALL_PARAM_COUNT;
+
 
     task->tss.cr3 = new_page_dir;
     mmu_set_page_dir(new_page_dir);

@@ -41,6 +41,8 @@ void pannic(const char *file, int line, const char *func, const char *cond);
 #define ASSERT(expr) ((void)0)
 #endif
 
+char * get_file_name (const char * name);
 
+int strings_count (char ** start);
 
 #endif

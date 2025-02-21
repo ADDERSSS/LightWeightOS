@@ -33,7 +33,7 @@ _start:
 
 protect_mode_entry:
 
-    //设置寄存器,进入32位保护模式运行
+    //设置寄存器进入32位保护模式运行
 
     mov $16, %ax
 	mov %ax, %ds
