@@ -70,4 +70,14 @@ static inline int fork (void) {
 
 }
 
+static inline int execve (const char * name, char * const * argv, char * const * env) {
+    syscall_args_t args;
+    args.id = SYS_execve;
+    args.arg0 = (int)name;
+    args.arg1 = (int)argv;
+    args.arg2 = (int)env;
+
+    return sys_call(&args);
+}
+
 #endif 

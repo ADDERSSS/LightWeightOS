@@ -36,11 +36,13 @@ void memory_init (_boot_info_t * boot_info);
 uint32_t memory_create_uvm (void);
 
 int memory_alloc_page_for (uint32_t addr, uint32_t size, int perm);
+int memory_alloc_for_page_dir (uint32_t page_dir, uint32_t vaddr, uint32_t size, int perm);
 
 uint32_t memory_alloc_page (void);
 void memory_free_page (uint32_t addr);
 
 void memory_destory_uvm (uint32_t page_dir);
-uint32_t memory_copy_uvm(uint32_t page_dir);
+uint32_t memory_copy_uvm (uint32_t page_dir);
+uint32_t memory_get_paddr (uint32_t page_dir, uint32_t vaddr);
 
 #endif

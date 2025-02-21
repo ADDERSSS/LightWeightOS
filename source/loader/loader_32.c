@@ -22,6 +22,7 @@ static void read_disk (uint32_t sector, uint32_t sector_count, uint8_t* buf){
             }
     }
 }
+
 static uint32_t reload_elf_file (uint8_t * file_buffer) {
     ELF32_Ehdr * elf_hdr = (ELF32_Ehdr *)file_buffer;
     if ((elf_hdr->e_ident[0] != 0x7F) || (elf_hdr->e_ident[1] != 'E') || (elf_hdr->e_ident[2] != 'L') || (elf_hdr->e_ident[3] != 'F')) {
