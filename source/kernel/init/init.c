@@ -5,9 +5,8 @@ void kernel_init (_boot_info_t * boot_info) {
     // ASSERT(3 < 2);
     cpu_init();
     log_init();
-
+    console_init();
     memory_init(boot_info);
-
     irq_init();
     time_init();
 
@@ -17,7 +16,6 @@ void kernel_init (_boot_info_t * boot_info) {
 void list_test (void) {
     list_t list;
     list_node_t nodes[5];
-
 
     list_init(&list);
     log_printf("list: first=0x%x, last=0x%x, count=%d",
