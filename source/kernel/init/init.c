@@ -11,6 +11,8 @@ void kernel_init (_boot_info_t * boot_info) {
 
     memory_init(boot_info);
 
+    fs_init();
+
     time_init();
 
     task_manager_init();

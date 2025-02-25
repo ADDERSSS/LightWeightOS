@@ -7,10 +7,13 @@
 #include "os_cfg.h"
 #include "tools/list.h"
 #include "cpu/irq.h"
+#include "fs/file.h"
 
 #define TASK_NAME_SIZE 32  
 
 #define TASK_TIME_SLICE_DEFAULT 10
+
+#define TASK_OFILE_NR 128
 
 #define TASK_FLAGS_SYSTEM (1 << 0)
 
@@ -39,6 +42,7 @@ typedef struct _task_t {
     int time_ticks;
     int slice_ticks;
 
+    file_t * file_table[TASK_OFILE_NR];
     char name [TASK_NAME_SIZE];
     
     list_node_t run_node;
@@ -54,6 +58,11 @@ int task_init (task_t * task, const char * name, int flag, uint32_t entry, uint3
 void task_switch_from_to (task_t * from, task_t * to);
 
 void task_time_tick (void);
+
+file_t * task_file (int fd);
+int task_alloc_fd (file_t * file);
+void task_remove_fd (int fd);
+
 typedef struct _task_manager_t {
     task_t * curr_task;
 

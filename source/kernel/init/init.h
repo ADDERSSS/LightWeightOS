@@ -13,5 +13,6 @@
 #include "core/memory.h"
 #include "dev/console.h"
 #include "dev/kbd.h"
+#include "fs/fs.h"
 
 #endif
