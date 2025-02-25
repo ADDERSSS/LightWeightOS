@@ -54,9 +54,9 @@ int sys_read (int file, char * ptr, int len) {
 
 int sys_write (int file, char * ptr, int len) {
     if (file == 1) { 
-        //ptr[len] = '\0';
-        // log_printf("%s", ptr);
-        console_write(0, ptr, len);
+        ptr[len] = '\0';
+        log_printf("%s", ptr);
+        //console_write(0, ptr, len);
     }
     return -1;
 }

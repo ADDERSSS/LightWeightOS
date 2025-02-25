@@ -3,14 +3,18 @@
 #include "tools/klib.h"
 #include "ipc/mutex.h"
 #include "dev/console.h"
+#include "dev/dev.h"
 
 #define LOG_USE_COM 0
 
 static mutex_t log_mutex;
 
+static int log_dev_id;
 
 void log_init (void) {  
     mutex_init(&log_mutex);
+
+    log_dev_id = dev_open(DEV_TTY, 0, (void *)0);
 
 #if LOG_USE_COM
     outb(COM1_PORT + 1, 0X00);
@@ -43,9 +47,11 @@ void log_printf(const char * fmt, ...) {
     outb(COM1_PORT, '\r');
     outb(COM1_PORT, '\n');
 #else
-    console_write(0, str_buf, kernel_strlen(str_buf));
+    //console_write(0, str_buf, kernel_strlen(str_buf));
+    dev_write(log_dev_id, 0, str_buf, kernel_strlen(str_buf));
     char c = '\n';
-    console_write(0, &c, 1);
+    //console_write(0, &c, 1);
+    dev_write(log_dev_id, 0, &c, 1);
 #endif
 
     mutex_unlock(&log_mutex);
