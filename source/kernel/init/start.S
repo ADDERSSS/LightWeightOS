@@ -102,6 +102,8 @@ exception_handler control_exception, 21, 1
 
 exception_handler time, 0x20, 0
 
+exception_handler kbd, 0x21, 0
+
     .text
     .global simple_switch
 simple_switch:

@@ -4,13 +4,20 @@ void kernel_init (_boot_info_t * boot_info) {
     ASSERT(boot_info->ram_region_count != 0);
     // ASSERT(3 < 2);
     cpu_init();
+
     log_init();
+
     console_init();
+
     memory_init(boot_info);
+
     irq_init();
+
     time_init();
 
     task_manager_init();
+
+    kbd_init();
 }
 
 void list_test (void) {

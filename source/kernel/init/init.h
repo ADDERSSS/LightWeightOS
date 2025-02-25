@@ -12,5 +12,6 @@
 #include "ipc/sem.h"
 #include "core/memory.h"
 #include "dev/console.h"
+#include "dev/kbd.h"
 
 #endif
