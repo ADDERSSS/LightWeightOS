@@ -100,13 +100,20 @@ int sys_read (int file, char * ptr, int len) {
         kernel_memcpy(ptr, temp_pos, len);
         temp_pos += len;
         return len;
+    } else {
+        file_t * p_file = task_file(file);
+        if (!p_file) {
+            log_printf("file not opened!");
+            return -1;
+        }
+
+    return dev_read(p_file->dev_id, 0, ptr, len);
     }
 
     return -1;
 }
 
 int sys_write (int file, char * ptr, int len) {
-    file = 0;
     file_t * p_file = task_file(file);
     if (!p_file) {
         log_printf("file not opened!");
@@ -135,6 +142,29 @@ int sys_isatty (int file) {
 
 int sys_fstat (int file, struct stat * st) {
     return -1;
+}
+
+int sys_dup (int file) {
+    if ((file < 0) && (file >= TASK_OFILE_NR)) {
+        log_printf("file %d is not valid.", file);
+        return -1;
+    }
+
+    file_t * p_file = task_file(file);
+    if (!p_file) {
+        log_printf("file not opened.");
+        return -1;
+    }
+
+    int fd = task_alloc_fd(p_file);
+    if (fd >= 0) {
+        p_file->ref++;
+        return fd;
+    }
+
+    log_printf("no task file avaliable");
+    return -1;
+
 }
 
 void fs_init (void) {

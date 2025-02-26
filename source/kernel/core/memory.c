@@ -313,7 +313,7 @@ char * sys_sbrk (int incr) {
     ASSERT (incr >= 0);
 
     if (incr == 0) {
-        log_printf("sbrk(0): end=0x%x", pre_heap_end);
+        //log_printf("sbrk(0): end=0x%x", pre_heap_end);
         return pre_heap_end;
     }
 
@@ -324,7 +324,7 @@ char * sys_sbrk (int incr) {
     if (start_offset) {
         if ((start_offset + incr) <= MEM_PAGE_SIZE) {
             task->heap_end = end;
-            log_printf("sbrk(%d): end=0x%x", pre_incr, end);
+            //log_printf("sbrk(%d): end=0x%x", pre_incr, end);
             return (char *)pre_heap_end;
         } else {
             uint32_t curr_size = MEM_PAGE_SIZE - start_offset;
@@ -342,7 +342,7 @@ char * sys_sbrk (int incr) {
         }
     }
 
-    log_printf("sbrk(%d): end=0x%x", pre_incr, end);
+    //log_printf("sbrk(%d): end=0x%x", pre_incr, end);
     task->heap_end = end;
     return (char *)pre_heap_end;
 }

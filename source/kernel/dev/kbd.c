@@ -3,6 +3,7 @@
 #include "tools/log.h"
 #include "comm/cpu_instr.h"
 #include "tools/klib.h"
+#include "dev/tty.h"
 
 static kbd_state_t kbd_stat;
 
@@ -19,7 +20,7 @@ static const key_map_t map_table[256] = {
         [0x0B] = {'0', ')'},
         [0x0C] = {'-', '_'},
         [0x0D] = {'=', '+'},
-        [0x0E] = {'\b', '\b'},
+        [0x0E] = {0x7F, 0x7F},
         [0x0F] = {'\t', '\t'},
         [0x10] = {'q', 'Q'},
         [0x11] = {'w', 'W'},
@@ -62,7 +63,7 @@ static const key_map_t map_table[256] = {
 
 void kbd_init (void) {
     static int inited = 0;
-    
+
     if (!inited) {
         kernel_memset(&kbd_stat, 0, sizeof(kbd_stat));
         irq_install(IRQ1_KEYBOARD, (irq_handler_t)exception_handler_kbd);
@@ -78,6 +79,13 @@ static inline int is_make_code (uint8_t key_code) {
 
 static inline char get_key (uint8_t key_code) {
     return key_code & 0x7F;
+}
+
+static void do_fx_key (int key) {
+    int index = key - KEY_F1;
+    if (kbd_stat.rctrl_press || kbd_stat.lctrl_press) {
+        tty_select(index);
+    }
 }
 
 static void do_normal_key (uint8_t raw_code) {
@@ -103,27 +111,18 @@ static void do_normal_key (uint8_t raw_code) {
             kbd_stat.lctrl_press = is_make ? 1 : 0;
             break;
         case KEY_F1:
-            break;
         case KEY_F2:
-            break;
         case KEY_F3:
-            break;
         case KEY_F4:
-            break;
         case KEY_F5:
-            break;
         case KEY_F6:
-            break;
         case KEY_F7:
-            break;
         case KEY_F8:
+            do_fx_key(key);
             break;
         case KEY_F9:
-            break;
         case KEY_F10:
-            break;
         case KEY_F11:
-            break;
         case KEY_F12:
             break;
         default:
@@ -142,7 +141,7 @@ static void do_normal_key (uint8_t raw_code) {
                     }
                 }
 
-                log_printf("key: %c", key);
+                tty_in(key);
             }
             break;
     }
