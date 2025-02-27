@@ -70,6 +70,11 @@ static int do_echo (int argc, char ** argv) {
     return 0;
 }
 
+static int do_exit (int argc, char ** argv) {
+    exit(0);
+    return 0;
+}
+
 static const cli_cmd_t cmd_list[] = {
     {
         .name = "help",
@@ -85,6 +90,11 @@ static const cli_cmd_t cmd_list[] = {
         .name = "echo",
         .usage = "echo [-n count] msg -- echo something",
         .do_func = do_echo,
+    },
+    {
+        .name = "quit",
+        .usage = "quit from shell",
+        .do_func = do_exit,
     },
 };
 
@@ -117,6 +127,23 @@ static void cli_init (const char * promot, const cli_cmd_t * cmd_list, int size)
     memset(cli.curr_input, 0, CLI_INPUT_SIZE);
     cli.cmd_start = cmd_list;
     cli.cmd_end = cmd_list + size;
+}
+
+static void run_exec_file (const char * path, int argc, char ** argv) {
+    int pid = fork();
+    if (pid < 0) {
+        fprintf(stderr, "fork failed %s", path);
+    } else if (pid == 0) {
+        for (int i = 0; i < argc; i ++) {
+            msleep(1000);
+            printf("arg %d = %s\n", i, argv[i]);
+        }
+        exit(-1);
+    } else {
+        int status;
+        int c_pid = wait(&status);
+        fprintf(stderr, "cmd %s result %d, pid=%d\n", path, status, c_pid);
+    }
 }
 
 int main (int argc, char ** argv) {
@@ -174,6 +201,8 @@ int main (int argc, char ** argv) {
             run_builtin(cmd, argc, argv);
             continue;
         }
+
+        run_exec_file("", argc, argv);
 
         fprintf(stderr, ESC_COLOR_ERROR"Unknown command: %s\n"ESC_COLOR_DEFULT, argv[0]);
 

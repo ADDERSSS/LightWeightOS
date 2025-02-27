@@ -153,6 +153,7 @@ int console_init (int index) {
     console->old_cursor_row = console->cursor_row;
     console->write_state = CONSOLE_WRITE_NORMAL;
 
+    mutex_init(&console->mutex);
     return 0;
 }
 
@@ -317,6 +318,7 @@ int console_write (tty_t * tty) {
     console_t * console_now = console_buf + tty->console_index;
     int len = 0;
 
+    mutex_lock(&console_now->mutex);
     do {
         char ch;
         int err = tty_fifo_get(&tty->ofifo, &ch);
@@ -341,6 +343,8 @@ int console_write (tty_t * tty) {
         }
         len ++;
     } while(1);
+
+    mutex_unlock(&console_now->mutex);
 
     if (tty->console_index == curr_console_index) {
         update_cursor_pos(console_now);
