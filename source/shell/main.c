@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <sys/file.h>
 
 static cli_t cli;
 static const char * promot = "sh >>";
@@ -147,7 +148,7 @@ static void run_exec_file (const char * path, int argc, char ** argv) {
 }
 
 int main (int argc, char ** argv) {
-    open(argv[0], 0);
+    open(argv[0], O_RDWR);
     dup(0);
     dup(0);
 
