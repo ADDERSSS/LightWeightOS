@@ -105,8 +105,6 @@ void init_main (void) {
     // list_test();
 
     log_printf("Kernel is running ...");
-    log_printf("Version: %s %s", OS_VERSION, "LightWeightOS");
-    log_printf("%d %d %x %c", 123456, -123, 0x123, 'a');
 
     task_first_init();
     

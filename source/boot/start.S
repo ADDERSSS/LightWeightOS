@@ -29,7 +29,7 @@ _start:
 	int $0x10
 	mov $'W', %al
 	int $0x10
-	mov $'e', %al
+	mov $'e', %al 
 	int $0x10
 	mov $'i', %al
 	int $0x10

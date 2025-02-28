@@ -8,6 +8,7 @@
 #include "tools/list.h"
 #include "fs/devfs/devfs.h"
 #include <sys/file.h>
+#include "dev/disk.h"
 
 
 #define TEMP_FILE_ID 100
@@ -391,6 +392,8 @@ mount_failed:
 void fs_init (void) {
     mount_list_init();
     file_table_init();
+
+    disk_init();
 
     fs_t * fs = mount(FS_DEVFS, "/dev", 0, 0);
     ASSERT (fs != (fs_t *)0);
