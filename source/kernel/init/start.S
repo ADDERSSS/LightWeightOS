@@ -104,6 +104,8 @@ exception_handler time, 0x20, 0
 
 exception_handler kbd, 0x21, 0
 
+exception_handler ide_primary, 0x2E, 0
+
     .text
     .global simple_switch
 simple_switch:

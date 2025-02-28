@@ -26,8 +26,10 @@
 #define IRQ20_VE 20
 #define IRQ21_CP 21
 
-#define IRQ0_TIMER 0X20
-#define IRQ1_KEYBOARD 0X21
+#define IRQ0_TIMER 0x20
+#define IRQ1_KEYBOARD 0x21
+
+#define IRQ14_HARDDISK_PRIMARY 0x2E
 
 #define PIC0_ICW1 0x20
 #define PIC0_ICW2 0x21
@@ -41,14 +43,14 @@
 #define PIC1_ICW3 0xA1
 #define PIC1_ICW4 0xA1
 #define PIC1_IMR 0xA1
-#define PIC1_OCW2 0XA0
+#define PIC1_OCW2 0Xa0
 
 #define PIC_ICW1_ALWAYS_1 (1 << 4)
 #define PIC_ICW1_ICW4 (1 << 0)
 #define PIC_ICW4_8086 (1 << 0)
 #define PIC_OCW2_EOI (1 << 5)
 
-#define IRQ_PIC_START 0X20
+#define IRQ_PIC_START 0x20
 
 #define ERR_PAGE_P (1 << 0)
 #define ERR_PAGE_WR (1 << 1)

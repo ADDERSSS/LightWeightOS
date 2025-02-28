@@ -13,6 +13,7 @@
 #define FS_MOUNTP_SIZE 512
 
 typedef enum _fs_type_t {
+    FS_FAT16,
     FS_DEVFS,
 }fs_type_t;
 

@@ -17,4 +17,6 @@
 
 #define OS_VERSION "1.0.0"
 
+#define ROOT_DEV DEV_DISK, 0Xb1
+
 #endif
