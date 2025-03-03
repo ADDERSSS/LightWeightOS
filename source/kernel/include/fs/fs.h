@@ -9,6 +9,8 @@
 #include "fs/file.h"
 #include "tools/list.h"
 #include "ipc/mutex.h"
+#include "fs/fatfs/fatfs.h"
+#include "applib/lib_syscall.h"
 
 #define FS_MOUNTP_SIZE 512
 
@@ -27,6 +29,11 @@ typedef struct _fs_op_t {
     void (*close) (file_t * file);
     int (*seek) (file_t * file, uint32_t offset, int dir);
     int (*stat) (file_t * file, struct stat * st);
+    int (*ioctl) (file_t * file, int cmd, int arg0, int arg1);
+
+    int (*opendir) (struct _fs_t * fs, const char * name, DIR * dir);
+    int (*readdir) (struct _fs_t * fs, DIR * dir, struct dirent * dirent);
+    int (*closedir) (struct _fs_t * fs, DIR * dir);
 }fs_op_t;
 typedef struct _fs_t {
     char mount_point[FS_MOUNTP_SIZE];
@@ -37,6 +44,11 @@ typedef struct _fs_t {
     int dev_id;
     list_node_t node;
     mutex_t * mutex;
+
+    union {
+        fat_t fat_data;
+    };
+
 }fs_t;
 
 void fs_init (void);
@@ -50,8 +62,13 @@ int sys_close(int file);
 int sys_isatty (int file);
 int sys_fstat (int file, struct stat * st);
 int sys_dup (int file);
+int sys_ioctl (int file, int cmd, int arg0, int arg1);
 
 int path_to_num (const char * path, int * num);
 const char * path_next_child (const char * path);
+
+int sys_opendir (const char * name, DIR * dir);
+int sys_readdir (DIR * dir, struct dirent * dirent);
+int sys_closedir (DIR * dir);
 
 #endif

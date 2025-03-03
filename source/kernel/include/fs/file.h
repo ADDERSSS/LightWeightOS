@@ -9,6 +9,8 @@
 typedef enum _file_type_t {
     FILE_UNKNOWN = 0,
     FILE_TTY,
+    FILE_DIR,
+    FILE_NORMAL,
 }file_type_t;
 
 struct _fs_t;
@@ -22,6 +24,9 @@ typedef struct _file_t {
     int pos;
     int mode;
 
+    int sblk;
+    int cblk;
+    int p_index;
     struct _fs_t * fs;
 }file_t;
 

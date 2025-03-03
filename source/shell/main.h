@@ -3,6 +3,7 @@
 
 #define CLI_INPUT_SIZE 1024
 #define CLI_MAX_ARG_COUNT 10
+#define TTY_CMD_ECHO 0x1
 
 #define ESC_CMD2(Pn, cmd) "\x1b["#Pn#cmd
 
