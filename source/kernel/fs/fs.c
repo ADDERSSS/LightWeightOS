@@ -12,7 +12,6 @@
 #include "os_cfg.h"
 
 
-#define TEMP_FILE_ID 100
 #define FS_TABLE_SIZE 10
 
 static list_t mounted_list;
@@ -22,9 +21,6 @@ static list_t free_list;
 extern fs_op_t devfs_op;
 extern fs_op_t fatfs_op;
 static fs_t * root_fs;
-
-static uint8_t TEMP_ADDR[100 * 1024];
-static uint8_t * temp_pos;
 
 
 static int is_fd_bad (int file) {
@@ -83,13 +79,6 @@ static void fs_unprotect (fs_t * fs) {
 }
 
 int sys_open (const char * name, int flags, ...) {
-    if (kernel_strncmp(name, "/shell.elf", 4) == 0) {
-        int dev_id = dev_open(DEV_DISK, 0xa0, (void *)0);
-        dev_read(dev_id, 5000, (uint8_t *)TEMP_ADDR, 80);
-        temp_pos = TEMP_ADDR;
-        return TEMP_FILE_ID;
-    }
-
     file_t * file = file_alloc();
     if (!file) {
         goto sys_open_failed;
@@ -140,12 +129,6 @@ sys_open_failed:
 }
 
 int sys_read (int file, char * ptr, int len) {
-    if (file == TEMP_FILE_ID) {
-        kernel_memcpy(ptr, temp_pos, len);
-        temp_pos += len;
-        return len;
-    } 
-    
     if (is_fd_bad(file) || !ptr || !len) {
         return 0;
     }
@@ -192,11 +175,6 @@ int sys_write (int file, char * ptr, int len) {
 }
 
 int sys_lseek(int file, int ptr, int dir) {
-    if (file == TEMP_FILE_ID) {
-        temp_pos = (uint8_t *)(TEMP_ADDR + ptr);
-        return 0;
-    }
-
     if (is_fd_bad(file)) {
         return 0;
     }
@@ -215,10 +193,6 @@ int sys_lseek(int file, int ptr, int dir) {
 }
 
 int sys_close(int file) {
-    if (file == TEMP_FILE_ID) {
-        return 0;
-    }
-
     if (is_fd_bad(file)) {
         log_printf("file error");
         return 0;
@@ -429,4 +403,11 @@ int sys_ioctl (int file, int cmd, int arg0, int arg1) {
     fs_unprotect(fs);
 
     return err;
+}
+
+int sys_unlink (const char * path) {
+	fs_protect(root_fs);
+	int err = root_fs->op->unlink(root_fs, path);
+	fs_unprotect(root_fs);
+	return err;
 }

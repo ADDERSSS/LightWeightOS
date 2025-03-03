@@ -1,6 +1,7 @@
 #include "cpu/irq.h"
 #include "cpu/cpu.h"
 #include "tools/log.h"
+#include "core/task.h"
 
 #define IDT_TABLE_NR 128
 
@@ -37,8 +38,12 @@ static void do_default_handler (exception_frame_t * frame, const char * message)
     dump_core_regs(frame);
     log_printf("-----------------------------------------");
 
-    for (;;) {
-        hlt();
+    if (frame->cs & 0x3) {
+        sys_exit(frame->error_code);
+    } else {
+        while (1) {
+            hlt();
+        }
     }
 }
 
@@ -114,8 +119,12 @@ void do_handler_general_protection(exception_frame_t *frame) {
 
     dump_core_regs(frame);
     log_printf("-------------------------");
-    while (1) {
-        hlt();
+    if (frame->cs & 0x3) {
+        sys_exit(frame->error_code);
+    } else {
+        while (1) {
+            hlt();
+        }
     }
 }
 
@@ -143,8 +152,13 @@ void do_handler_page_fault(exception_frame_t *frame) {
 
     dump_core_regs(frame);
     log_printf("-------------------------");
-    while (1) {
-        hlt();
+
+    if (frame->cs & 0x3) {
+        sys_exit(frame->error_code);
+    } else {
+        while (1) {
+            hlt();
+        }
     }
 }
 

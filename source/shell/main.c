@@ -168,6 +168,53 @@ less_quit:
     return 0;
 }
 
+static int do_cp (int argc, char ** argv) {
+    if (argc < 3) {
+        fprintf(stderr, "no [from] or no [to]");
+        return -1;
+    }
+
+    FILE * from, * to;
+    from = fopen(argv[1], "rb");
+    to = fopen(argv[2], "wb");
+    if (!from || !to) {
+        fprintf(stderr, "open file failed");
+        goto cp_failed;
+    }
+
+    char * buf = (char *)malloc(255);
+    int size;
+    while((size = fread(buf, 1, 255, from)) > 0) {
+        fwrite(buf, 1, 255, to);
+    }
+    free(buf);
+
+cp_failed:
+    if (from) {
+        fclose(from);
+    }
+
+    if (to) {
+        fclose(to);
+    }
+    return 0;
+}
+
+static int do_remove (int argc, char ** argv) {
+    if (argc < 2) {
+        fprintf(stderr, "no file");
+        return -1;
+    }
+
+    int err = unlink(argv[1]);
+    if (err < 0) {
+        fprintf(stderr, "rm file failed: %s", argv[1]);
+        return err;
+    }
+
+    return 0;
+}
+
 static const cli_cmd_t cmd_list[] = {
     {
         .name = "help",
@@ -191,8 +238,18 @@ static const cli_cmd_t cmd_list[] = {
     },
     {
         .name = "less",
-        .usage = "less [-l] file -- show file",
+        .usage = "cp src dest -- copy file",
         .do_func = do_less,
+    },
+    {
+        .name = "cp",
+        .usage = "less [-l] file -- show file",
+        .do_func = do_cp,
+    },
+    {
+        .name = "rm",
+        .usage = "rm file -- remove file",
+        .do_func = do_remove,
     },
     {
         .name = "quit",
@@ -232,14 +289,24 @@ static void cli_init (const char * promot, const cli_cmd_t * cmd_list, int size)
     cli.cmd_end = cmd_list + size;
 }
 
+static const char * find_exec_path (const char * filename) {
+    int fd = open(filename, 0);
+    if (fd < 0) {
+        return (const char *)0;
+    }
+
+    close(fd);
+    return filename;
+}
+
 static void run_exec_file (const char * path, int argc, char ** argv) {
     int pid = fork();
     if (pid < 0) {
-        fprintf(stderr, "fork failed %s", path);
+        fprintf(stderr, "fork failed: %s", path);
     } else if (pid == 0) {
-        for (int i = 0; i < argc; i ++) {
-            msleep(1000);
-            printf("arg %d = %s\n", i, argv[i]);
+        int err = execve(path, argv, (char * const *)0);
+        if (err < 0) {
+            fprintf(stderr, "exec failed: %s", path);
         }
         exit(-1);
     } else {
@@ -305,10 +372,13 @@ int main (int argc, char ** argv) {
             continue;
         }
 
-        run_exec_file("", argc, argv);
+        const char * path = find_exec_path(argv[0]);
+        if (path) {
+            run_exec_file(path, argc, argv);
+            continue;
+        }
 
         fprintf(stderr, ESC_COLOR_ERROR"Unknown command: %s\n"ESC_COLOR_DEFULT, argv[0]);
-
         //exec
     }
 } 

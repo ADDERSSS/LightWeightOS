@@ -228,3 +228,10 @@ int ioctl (int file, int cmd, int arg0, int arg1) {
 
     return sys_call(&args);
 }
+
+int unlink(const char *path) {
+    syscall_args_t args;
+    args.id = SYS_unlink;
+    args.arg0 = (int)path;
+    return sys_call(&args);
+}

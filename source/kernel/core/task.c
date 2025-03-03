@@ -575,7 +575,7 @@ static int copy_args (char * to, uint32_t page_dir, int argc, char ** argv) {
     task_args.argv = (char **)(to + sizeof(task_args_t));
     task_args.ret_addr = 0;
 
-    char * dest_arg = to + sizeof(task_args_t) + sizeof(char *) * argc;
+    char * dest_arg = to + sizeof(task_args_t) + sizeof(char *) * (argc + 1);
     char ** dest_arg_tb = (char **)memory_get_paddr(page_dir, (uint32_t)(to + sizeof(task_args_t)));
     for (int i = 0; i < argc; i ++) {
         char * from = argv[i];
@@ -585,6 +585,10 @@ static int copy_args (char * to, uint32_t page_dir, int argc, char ** argv) {
 
         dest_arg_tb[i] = dest_arg;
         dest_arg += len;
+    }
+
+    if (argc) {
+        dest_arg_tb[argc] = '\0';
     }
 
     return memory_copy_uvm_data((uint32_t)to, page_dir, (uint32_t)&task_args, sizeof(task_args));
