@@ -185,7 +185,7 @@ static int do_cp (int argc, char ** argv) {
     char * buf = (char *)malloc(255);
     int size;
     while((size = fread(buf, 1, 255, from)) > 0) {
-        fwrite(buf, 1, 255, to);
+        fwrite(buf, 1, size, to);
     }
     free(buf);
 
@@ -238,12 +238,12 @@ static const cli_cmd_t cmd_list[] = {
     },
     {
         .name = "less",
-        .usage = "cp src dest -- copy file",
+        .usage = "less [-l] file -- show file",
         .do_func = do_less,
     },
     {
         .name = "cp",
-        .usage = "less [-l] file -- show file",
+        .usage = "cp src dest -- copy file",
         .do_func = do_cp,
     },
     {
@@ -290,13 +290,21 @@ static void cli_init (const char * promot, const cli_cmd_t * cmd_list, int size)
 }
 
 static const char * find_exec_path (const char * filename) {
+    static char path[255];
+
     int fd = open(filename, 0);
     if (fd < 0) {
-        return (const char *)0;
+        sprintf(path, "%s.elf", filename);
+        fd = open(path, 0);
+        if (fd < 0) {
+            return (const char *)0;
+        }
+        close(fd);
+        return path;
+    } else {
+        close(fd);
+        return filename;
     }
-
-    close(fd);
-    return filename;
 }
 
 static void run_exec_file (const char * path, int argc, char ** argv) {
